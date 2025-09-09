@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Civic Issue Management</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .main-content {
+            flex: 1;
+            background-color: #f8f9fa;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .issue-detail-modal .modal-dialog {
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Check -->
+    <script>
+        // Check if user is authenticated
+        const isAuthenticated = sessionStorage.getItem('adminAuthenticated');
+        if (!isAuthenticated) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar admin-sidebar">
+            <div class="p-3">
+                <h4><i class="fas fa-cog"></i> Admin Panel</h4>
+                <hr class="bg-white">
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="#dashboard" data-tab="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#issues" data-tab="issues">
+                        <i class="fas fa-list"></i> All Issues
+                    </a>
+                    <a class="nav-link" href="#analytics" data-tab="analytics">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                    </a>
+                    <a class="nav-link" href="index.html">
+                        <i class="fas fa-home"></i> Public Portal
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <div class="container-fluid">
+                    <h3 class="mb-0">Civic Issue Management System</h3>
+                    <div class="ms-auto d-flex align-items-center">
+                        <span class="badge bg-primary me-3">Admin</span>
+                        <button class="btn btn-sm btn-danger" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <h2 class="mb-4">Dashboard Overview</h2>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <h6 class="text-muted">Total Issues</h6>
+                                <h2 id="statTotal">0</h2>
+                                <small class="text-muted">All time</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <h6 class="text-muted">Pending</h6>
+                                <h2 class="text-warning" id="statPending">0</h2>
+                                <small class="text-muted">Awaiting action</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <h6 class="text-muted">In Progress</h6>
+                                <h2 class="text-info" id="statInProgress">0</h2>
+                                <small class="text-muted">Being addressed</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <h6 class="text-muted">Resolved</h6>
+                                <h2 class="text-success" id="statResolved">0</h2>
+                                <small class="text-muted">Completed</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <h5>Issues by Category</h5>
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <h5>Issues by Department</h5>
+                                <canvas id="departmentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Issues -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="stat-box">
+                                <h5 class="mb-3">Recent Issues</h5>
+                                <div id="recentIssuesTable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Issues Tab -->
+                <div id="issues" class="tab-content" style="display: none;">
+                    <h2 class="mb-4">All Issues</h2>
+                    
+                    <!-- Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterStatus">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterCategory">
+                                <option value="">All Categories</option>
+                                <option value="pothole">Pothole</option>
+                                <option value="streetlight">Street Light</option>
+                                <option value="trash">Trash/Litter</option>
+                                <option value="graffiti">Graffiti</option>
+                                <option value="water_leak">Water Leak</option>
+                                <option value="traffic">Traffic Issue</option>
+                                <option value="park">Park Maintenance</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterPriority">
+                                <option value="">All Priorities</option>
+                                <option value="low">Low</option>
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                <i class="fas fa-filter"></i> Apply Filters
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetFilters()">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Issues Table -->
+                    <div class="stat-box">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Department</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="issuesTableBody">
+                                    <!-- Issues will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics" class="tab-content" style="display: none;">
+                    <h2 class="mb-4">Analytics & Reports</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="stat-box">
+                                <h5>Issue Trends (Last 7 Days)</h5>
+                                <canvas id="trendsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <h5>Resolution Time Analysis</h5>
+                                <div id="resolutionStats">
+                                    <p>Average Resolution Time: <strong id="avgResolutionTime">N/A</strong></p>
+                                    <p>Issues Resolved This Week: <strong id="weeklyResolved">0</strong></p>
+                                    <p>Issues Resolved This Month: <strong id="monthlyResolved">0</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <h5>Department Performance</h5>
+                                <div id="departmentPerformance"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issue Detail Modal -->
+    <div class="modal fade issue-detail-modal" id="issueDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Issue Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="issueDetailBody">
+                    <!-- Issue details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveChangesBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Admin JS -->
+    <script src="js/admin.js"></script>
+</body>
+</html>

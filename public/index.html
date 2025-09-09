@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicConnect - Report & Resolve Community Issues</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Background */
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50%, -50%); }
+        }
+        
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            background: white;
+            box-shadow: 0 2px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* User Login/Register Button */
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-auth {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+        
+        .btn-login:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+        
+        /* Hero Content */
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            padding-top: 120px;
+            color: white;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.2s;
+            animation-fill-mode: both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+        
+        .btn-action {
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            animation: bounceIn 1s ease 0.4s;
+            animation-fill-mode: both;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .btn-report {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-report:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            color: #764ba2;
+        }
+        
+        .btn-explore {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-explore:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Features Section */
+        .features-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 15px rgba(102, 126, 234, 0);
+            }
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .step {
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            z-index: 1;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            padding: 60px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .counter {
+            display: inline-block;
+        }
+        
+        /* Login Modal */
+        .modal-content {
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn-social {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .btn-social:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-google {
+            border-color: #4285f4;
+        }
+        
+        .btn-google:hover {
+            background: #4285f4;
+            color: white;
+        }
+        
+        .btn-phone {
+            border-color: #25d366;
+        }
+        
+        .btn-phone:hover {
+            background: #25d366;
+            color: white;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-action {
+                width: 250px;
+            }
+        }
+        
+        /* Floating Elements */
+        .floating-shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: floatShape 20s infinite ease-in-out;
+        }
+        
+        @keyframes floatShape {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-100px) rotate(120deg); }
+            66% { transform: translateY(100px) rotate(240deg); }
+        }
+        
+        .shape-1 {
+            top: 10%;
+            left: 10%;
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+        
+        .shape-2 {
+            top: 60%;
+            right: 10%;
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+            animation-delay: 5s;
+        }
+        
+        .shape-3 {
+            bottom: 10%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            animation-delay: 10s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#" style="font-weight: bold; color: #667eea;">
+                <i class="fas fa-city"></i> CivicConnect
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#stats">Impact</a>
+                    </li>
+                </ul>
+                <div class="auth-buttons">
+                    <button class="btn btn-auth btn-login" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-auth btn-register" data-bs-toggle="modal" data-bs-target="#registerModal">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        
+        <div class="container hero-content">
+            <h1 class="hero-title">Transform Your Community</h1>
+            <p class="hero-subtitle">Report civic issues instantly. Track progress transparently. Build a better city together.</p>
+            
+            <div class="action-buttons">
+                <a href="report.html" class="btn-action btn-report">
+                    <i class="fas fa-bullhorn"></i> Report an Issue
+                </a>
+                <a href="track.html" class="btn-action btn-explore">
+                    <i class="fas fa-map-marked-alt"></i> Track Issues
+                </a>
+            </div>
+            
+            <div class="row mt-5" data-aos="fade-up" data-aos-delay="600">
+                <div class="col-md-4">
+                    <div class="text-white">
+                        <i class="fas fa-camera fa-3x mb-3"></i>
+                        <h4>Snap & Report</h4>
+                        <p>Take a photo and submit instantly</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-white">
+                        <i class="fas fa-map-pin fa-3x mb-3"></i>
+                        <h4>Auto Location</h4>
+                        <p>GPS automatically tags the location</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-white">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <h4>Track Progress</h4>
+                        <p>Real-time updates on resolution</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Why Choose CivicConnect?</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4>Mobile First</h4>
+                        <p>Designed for smartphones. Report issues on the go with just a few taps.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4>Instant Response</h4>
+                        <p>Automated routing ensures your report reaches the right department immediately.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>Secure & Private</h4>
+                        <p>Your data is protected. Report anonymously if you prefer.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4>Community Driven</h4>
+                        <p>See what others are reporting. Support important issues in your area.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h4>Analytics Dashboard</h4>
+                        <p>Track resolution rates and government performance transparently.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <h4>Smart Notifications</h4>
+                        <p>Get updates when your issue is being addressed or resolved.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">How It Works</h2>
+            <div class="row">
+                <div class="col-md-3 step" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-number">1</div>
+                    <h5>Spot an Issue</h5>
+                    <p>Notice a pothole, broken streetlight, or any civic problem</p>
+                </div>
+                <div class="col-md-3 step" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-number">2</div>
+                    <h5>Report It</h5>
+                    <p>Take a photo, add details, and submit through our app</p>
+                </div>
+                <div class="col-md-3 step" data-aos="fade-up" data-aos-delay="300">
+                    <div class="step-number">3</div>
+                    <h5>Track Progress</h5>
+                    <p>Receive updates as authorities work on your report</p>
+                </div>
+                <div class="col-md-3 step" data-aos="fade-up" data-aos-delay="400">
+                    <div class="step-number">4</div>
+                    <h5>Issue Resolved</h5>
+                    <p>Get notified when the problem is fixed</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="stats" class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-number counter" data-target="1234">0</div>
+                    <div>Issues Reported</div>
+                </div>
+                <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-number counter" data-target="892">0</div>
+                    <div>Issues Resolved</div>
+                </div>
+                <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-number counter" data-target="72">0</div>
+                    <div>Avg Resolution Hours</div>
+                </div>
+                <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-number counter" data-target="5678">0</div>
+                    <div>Active Users</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 CivicConnect | Government of Jharkhand</p>
+            <p>Building Better Communities Together</p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Welcome Back!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-center mb-4">Login to track your reports and contribute to your community</p>
+                    
+                    <div class="social-login">
+                        <button class="btn-social btn-google" onclick="loginWithGoogle()">
+                            <i class="fab fa-google"></i> Continue with Google
+                        </button>
+                        <button class="btn-social btn-phone" onclick="loginWithPhone()">
+                            <i class="fas fa-phone"></i> Continue with Phone
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <small>By continuing, you agree to our Terms of Service</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Join CivicConnect</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-center mb-4">Create an account to start making a difference in your community</p>
+                    
+                    <div class="social-login">
+                        <button class="btn-social btn-google" onclick="signupWithGoogle()">
+                            <i class="fab fa-google"></i> Sign up with Google
+                        </button>
+                        <button class="btn-social btn-phone" onclick="signupWithPhone()">
+                            <i class="fas fa-phone"></i> Sign up with Phone
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <small>Already have an account? <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">Login</a></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+        
+        // Counter Animation
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+        
+        const countUp = () => {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText;
+                const inc = target / speed;
+                
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc);
+                    setTimeout(countUp, 10);
+                } else {
+                    counter.innerText = target;
+                }
+            });
+        };
+        
+        // Start counter when stats section is visible
+        const statsSection = document.querySelector('.stats-section');
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                countUp();
+                observer.disconnect();
+            }
+        });
+        
+        observer.observe(statsSection);
+        
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+        
+        // Login Functions (placeholders - implement with Firebase/Auth0)
+        function loginWithGoogle() {
+            alert('Google login will be integrated with Firebase Auth');
+            // Implement Google OAuth
+            window.location.href = 'report.html'; // Temporary redirect
+        }
+        
+        function loginWithPhone() {
+            alert('Phone login will be integrated with OTP service');
+            // Implement Phone OTP
+            window.location.href = 'report.html'; // Temporary redirect
+        }
+        
+        function signupWithGoogle() {
+            alert('Google signup will be integrated with Firebase Auth');
+            // Implement Google OAuth
+            window.location.href = 'report.html'; // Temporary redirect
+        }
+        
+        function signupWithPhone() {
+            alert('Phone signup will be integrated with OTP service');
+            // Implement Phone OTP
+            window.location.href = 'report.html'; // Temporary redirect
+        }
+    </script>
+</body>
+</html>

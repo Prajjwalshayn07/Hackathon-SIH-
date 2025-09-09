@@ -1,0 +1,317 @@
+/* Custom CSS for Civic Issue Reporter */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Apply animations to elements */
+.navbar {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.hero-section {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+#report {
+    animation: fadeInUp 1s ease-out;
+}
+
+.issue-card {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.issue-card:nth-child(1) { animation-delay: 0.1s; }
+.issue-card:nth-child(2) { animation-delay: 0.2s; }
+.issue-card:nth-child(3) { animation-delay: 0.3s; }
+.issue-card:nth-child(4) { animation-delay: 0.4s; }
+.issue-card:nth-child(5) { animation-delay: 0.5s; }
+.issue-card:nth-child(6) { animation-delay: 0.6s; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.hero-section h1 {
+    font-weight: bold;
+}
+
+/* Cards */
+.card {
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+/* Issue Cards */
+.issue-card {
+    border-left: 4px solid;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.issue-card.pending {
+    border-left-color: var(--warning-color);
+}
+
+.issue-card.in_progress {
+    border-left-color: var(--info-color);
+}
+
+.issue-card.resolved {
+    border-left-color: var(--success-color);
+}
+
+.issue-card:hover {
+    transform: translateX(5px);
+}
+
+/* Status Badge */
+.badge-pending {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+.badge-in_progress {
+    background-color: var(--info-color);
+}
+
+.badge-resolved {
+    background-color: var(--success-color);
+}
+
+/* Priority Indicators */
+.priority-high {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.priority-normal {
+    color: var(--warning-color);
+}
+
+.priority-low {
+    color: var(--success-color);
+}
+
+/* Statistics Cards */
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Image Preview */
+#imagePreview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+/* Map Markers */
+.custom-marker {
+    background-color: white;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Filter Buttons */
+.filter-btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.filter-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Loading Spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .stat-number {
+        font-size: 1.8rem;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    #issuesMap {
+        height: 350px !important;
+    }
+}
+
+/* Admin Dashboard Specific */
+.admin-sidebar {
+    background-color: #2c3e50;
+    min-height: 100vh;
+    color: white;
+}
+
+.admin-sidebar .nav-link {
+    color: #ecf0f1;
+    padding: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.admin-sidebar .nav-link:hover {
+    background-color: #34495e;
+}
+
+.admin-sidebar .nav-link.active {
+    background-color: var(--primary-color);
+}
+
+/* Data Table */
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+/* Action Buttons */
+.action-buttons .btn {
+    margin-right: 5px;
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+/* Category Icons */
+.category-icon {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 40px;
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+.category-pothole { background-color: #8B4513; color: white; }
+.category-streetlight { background-color: #FFD700; color: #333; }
+.category-trash { background-color: #708090; color: white; }
+.category-graffiti { background-color: #FF69B4; color: white; }
+.category-water_leak { background-color: #4682B4; color: white; }
+.category-traffic { background-color: #FF4500; color: white; }
+.category-park { background-color: #228B22; color: white; }
+.category-other { background-color: #6c757d; color: white; }
+
+/* Form Validation */
+.was-validated .form-control:valid {
+    border-color: var(--success-color);
+}
+
+.was-validated .form-control:invalid {
+    border-color: var(--danger-color);
+}
