@@ -507,7 +507,7 @@
                 <a href="report.html" class="btn-action btn-report">
                     <i class="fas fa-bullhorn"></i> Report an Issue
                 </a>
-                <a href="track.html" class="btn-action btn-explore">
+                <a href="report.html#issues" class="btn-action btn-explore">
                     <i class="fas fa-map-marked-alt"></i> Track Issues
                 </a>
             </div>
@@ -654,6 +654,23 @@
         </div>
     </section>
 
+    <!-- Community Impact Section -->
+    <section id="community-impact" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Community Impact</h2>
+            <div class="row" id="recentIssuesContainer">
+                <div class="col-12 text-center">
+                    <p class="text-muted">Loading recent issues...</p>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="report.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-eye"></i> View All Issues & Report New
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -738,7 +755,14 @@
                 const stats = await response.json();
                 
                 // Update counter targets with real data
-                document.getElementById('totalIssuesCounter').setAttribute('data-target', stats.total || 0);
+                const totalElement = document.getElementById('totalIssuesCounter');
+                const resolvedElement = document.getElementById('resolvedIssuesCounter');
+                const inProgressElement = document.getElementById('inProgressCounter');
+                const pendingElement = document.getElementById('pendingCounter');
+                
+                // Update the actual text immediately if data is available
+                totalElement.textContent = stats.total || 0;
+                totalElement.setAttribute('data-target', stats.total || 0);
                 
                 let resolved = 0, inProgress = 0, pending = 0;
                 stats.byStatus.forEach(item => {
@@ -747,17 +771,81 @@
                     if (item.status === 'pending') pending = item.count;
                 });
                 
-                document.getElementById('resolvedIssuesCounter').setAttribute('data-target', resolved);
-                document.getElementById('inProgressCounter').setAttribute('data-target', inProgress);
-                document.getElementById('pendingCounter').setAttribute('data-target', pending);
+                resolvedElement.textContent = resolved;
+                resolvedElement.setAttribute('data-target', resolved);
+                inProgressElement.textContent = inProgress;
+                inProgressElement.setAttribute('data-target', inProgress);
+                pendingElement.textContent = pending;
+                pendingElement.setAttribute('data-target', pending);
+                
+                return true;
             } catch (error) {
                 console.error('Error loading statistics:', error);
                 // Set default values if API fails
-                document.getElementById('totalIssuesCounter').setAttribute('data-target', 0);
-                document.getElementById('resolvedIssuesCounter').setAttribute('data-target', 0);
-                document.getElementById('inProgressCounter').setAttribute('data-target', 0);
-                document.getElementById('pendingCounter').setAttribute('data-target', 0);
+                document.getElementById('totalIssuesCounter').textContent = 0;
+                document.getElementById('resolvedIssuesCounter').textContent = 0;
+                document.getElementById('inProgressCounter').textContent = 0;
+                document.getElementById('pendingCounter').textContent = 0;
+                return false;
             }
+        }
+        
+        // Load recent issues for Community Impact section
+        async function loadRecentIssues() {
+            try {
+                const response = await fetch('/api/issues');
+                const data = await response.json();
+                const container = document.getElementById('recentIssuesContainer');
+                
+                if (data.issues && data.issues.length > 0) {
+                    // Show only the 3 most recent issues
+                    const recentIssues = data.issues.slice(0, 3);
+                    container.innerHTML = recentIssues.map(issue => `
+                        <div class="col-md-4 mb-3" data-aos="fade-up">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">${escapeHtml(issue.title)}</h5>
+                                    <p class="card-text">
+                                        <span class="badge bg-warning">${issue.status}</span>
+                                        <span class="badge bg-secondary">${issue.category}</span>
+                                    </p>
+                                    <p class="card-text small">${escapeHtml(issue.description || 'No description')}</p>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt"></i> ${escapeHtml(issue.address || 'Location not specified')}
+                                        </small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="col-12 text-center">
+                            <p class="text-muted">No issues reported yet. Be the first to make a difference!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading recent issues:', error);
+                document.getElementById('recentIssuesContainer').innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Unable to load recent issues</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
         }
         
         // Counter Animation
@@ -779,18 +867,27 @@
             });
         };
         
-        // Load statistics first, then start counter when stats section is visible
-        loadRealStatistics().then(() => {
-            const statsSection = document.querySelector('.stats-section');
+        // Load statistics and recent issues immediately
+        loadRealStatistics();
+        loadRecentIssues();
+        
+        // Auto-refresh statistics every 10 seconds
+        setInterval(() => {
+            loadRealStatistics();
+            loadRecentIssues();
+        }, 10000);
+        
+        // Counter animation for stats (only if values change)
+        const statsSection = document.querySelector('.stats-section');
+        if (statsSection) {
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) {
-                    countUp();
+                    // Counters already show real values, animation is optional
                     observer.disconnect();
                 }
             });
-            
             observer.observe(statsSection);
-        });
+        }
         
         // Navbar scroll effect
         window.addEventListener('scroll', () => {
