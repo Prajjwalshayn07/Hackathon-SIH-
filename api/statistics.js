@@ -1,14 +1,18 @@
-// Import the shared issues data
-import { getIssues } from './issues.js';
-
+// Use global scope to access shared issues data
 export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Get actual issues data
-  const issues = getIssues();
+  // Initialize global issues if not exists
+  if (!global.issues) {
+    global.issues = [];
+    global.nextId = 1;
+  }
+  
+  // Get actual issues data from global scope
+  const issues = global.issues || [];
   
   // Calculate real statistics from actual issues
   const stats = {

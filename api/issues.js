@@ -1,12 +1,16 @@
 // Simplified API for Vercel Deployment
-// This stores data temporarily in memory (resets on each deployment)
+// Using global scope to persist data between function invocations
+// Note: This will still reset when the function cold starts
 
-let issues = [];
-let nextId = 1;
+// Use global scope for better persistence in Vercel
+if (!global.issues) {
+  global.issues = [];
+  global.nextId = 1;
+}
 
 // Export function to get issues for statistics
 export function getIssues() {
-  return issues;
+  return global.issues || [];
 }
 
 export default function handler(req, res) {
@@ -25,14 +29,14 @@ export default function handler(req, res) {
     const { id } = req.query;
     
     if (id) {
-      const issue = issues.find(i => i.id === parseInt(id));
+      const issue = global.issues.find(i => i.id === parseInt(id));
       if (issue) {
         res.status(200).json({ issue, comments: [] });
       } else {
         res.status(404).json({ error: 'Issue not found' });
       }
     } else {
-      res.status(200).json({ issues });
+      res.status(200).json({ issues: global.issues });
     }
     return;
   }
@@ -54,7 +58,7 @@ export default function handler(req, res) {
     }
     
     const newIssue = {
-      id: nextId++,
+      id: global.nextId++,
       title: data.title || 'New Issue',
       description: data.description || '',
       category: data.category || 'other',
@@ -69,7 +73,7 @@ export default function handler(req, res) {
       department: getDepartment(data.category)
     };
 
-    issues.unshift(newIssue);
+    global.issues.unshift(newIssue);
     res.status(201).json({ 
       id: newIssue.id, 
       message: 'Issue reported successfully',
@@ -81,11 +85,11 @@ export default function handler(req, res) {
   // PUT update issue
   if (req.method === 'PUT') {
     const { id } = req.query;
-    const issueIndex = issues.findIndex(i => i.id === parseInt(id));
+    const issueIndex = global.issues.findIndex(i => i.id === parseInt(id));
     
     if (issueIndex !== -1) {
-      issues[issueIndex] = {
-        ...issues[issueIndex],
+      global.issues[issueIndex] = {
+        ...global.issues[issueIndex],
         ...req.body,
         updated_at: new Date().toISOString()
       };
@@ -99,10 +103,10 @@ export default function handler(req, res) {
   // DELETE issue
   if (req.method === 'DELETE') {
     const { id } = req.query;
-    const initialLength = issues.length;
-    issues = issues.filter(i => i.id !== parseInt(id));
+    const initialLength = global.issues.length;
+    global.issues = global.issues.filter(i => i.id !== parseInt(id));
     
-    if (issues.length < initialLength) {
+    if (global.issues.length < initialLength) {
       res.status(200).json({ message: 'Issue deleted successfully' });
     } else {
       res.status(404).json({ error: 'Issue not found' });
