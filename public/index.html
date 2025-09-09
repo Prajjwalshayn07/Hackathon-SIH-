@@ -691,12 +691,30 @@
                     <p class="text-center mb-4">Login to track your reports and contribute to your community</p>
                     
                     <div class="social-login">
-                        <button class="btn-social btn-google" onclick="loginWithGoogle()">
+                        <button class="btn-social btn-google" onclick="handleGoogleLogin()">
                             <i class="fab fa-google"></i> Continue with Google
                         </button>
-                        <button class="btn-social btn-phone" onclick="loginWithPhone()">
+                        <button class="btn-social btn-phone" onclick="showPhoneInput()">
                             <i class="fas fa-phone"></i> Continue with Phone
                         </button>
+                    </div>
+                    
+                    <!-- Phone Number Input (Hidden by default) -->
+                    <div id="phoneInputSection" style="display: none; margin-top: 20px;">
+                        <div class="form-group">
+                            <label>Enter Phone Number:</label>
+                            <input type="tel" id="phoneNumber" class="form-control" placeholder="+91 XXXXXXXXXX">
+                            <button id="phone-auth-button" class="btn btn-primary mt-2" onclick="handlePhoneLogin()">Send OTP</button>
+                        </div>
+                    </div>
+                    
+                    <!-- OTP Input (Hidden by default) -->
+                    <div id="otpInputSection" style="display: none; margin-top: 20px;">
+                        <div class="form-group">
+                            <label>Enter OTP:</label>
+                            <input type="text" id="otpCode" class="form-control" placeholder="Enter 6-digit OTP">
+                            <button class="btn btn-success mt-2" onclick="handleOTPVerification()">Verify OTP</button>
+                        </div>
                     </div>
                     
                     <div class="text-center mt-4">
@@ -719,12 +737,30 @@
                     <p class="text-center mb-4">Create an account to start making a difference in your community</p>
                     
                     <div class="social-login">
-                        <button class="btn-social btn-google" onclick="signupWithGoogle()">
+                        <button class="btn-social btn-google" onclick="handleGoogleLogin()">
                             <i class="fab fa-google"></i> Sign up with Google
                         </button>
-                        <button class="btn-social btn-phone" onclick="signupWithPhone()">
+                        <button class="btn-social btn-phone" onclick="showPhoneInputRegister()">
                             <i class="fas fa-phone"></i> Sign up with Phone
                         </button>
+                    </div>
+                    
+                    <!-- Phone Number Input for Register (Hidden by default) -->
+                    <div id="phoneInputSectionRegister" style="display: none; margin-top: 20px;">
+                        <div class="form-group">
+                            <label>Enter Phone Number:</label>
+                            <input type="tel" id="phoneNumberRegister" class="form-control" placeholder="+91 XXXXXXXXXX">
+                            <button id="phone-auth-button-register" class="btn btn-primary mt-2" onclick="handlePhoneRegister()">Send OTP</button>
+                        </div>
+                    </div>
+                    
+                    <!-- OTP Input for Register (Hidden by default) -->
+                    <div id="otpInputSectionRegister" style="display: none; margin-top: 20px;">
+                        <div class="form-group">
+                            <label>Enter OTP:</label>
+                            <input type="text" id="otpCodeRegister" class="form-control" placeholder="Enter 6-digit OTP">
+                            <button class="btn btn-success mt-2" onclick="handleOTPVerificationRegister()">Verify OTP</button>
+                        </div>
                     </div>
                     
                     <div class="text-center mt-4">
@@ -735,11 +771,19 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- AOS Animation -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="js/firebase-config.js"></script>
     
     <script>
         // Initialize AOS
@@ -748,11 +792,17 @@
             once: true
         });
         
-        // Load real statistics from API
+        // Load real statistics from Firebase
         async function loadRealStatistics() {
             try {
-                const response = await fetch('/api/statistics');
-                const stats = await response.json();
+                // Wait for Firebase to initialize
+                if (typeof getStatisticsFromFirestore === 'undefined') {
+                    console.log('Waiting for Firebase to load...');
+                    setTimeout(loadRealStatistics, 1000);
+                    return;
+                }
+                
+                const stats = await getStatisticsFromFirestore();
                 
                 // Update counter targets with real data
                 const totalElement = document.getElementById('totalIssuesCounter');
@@ -764,19 +814,12 @@
                 totalElement.textContent = stats.total || 0;
                 totalElement.setAttribute('data-target', stats.total || 0);
                 
-                let resolved = 0, inProgress = 0, pending = 0;
-                stats.byStatus.forEach(item => {
-                    if (item.status === 'resolved') resolved = item.count;
-                    if (item.status === 'in_progress') inProgress = item.count;
-                    if (item.status === 'pending') pending = item.count;
-                });
-                
-                resolvedElement.textContent = resolved;
-                resolvedElement.setAttribute('data-target', resolved);
-                inProgressElement.textContent = inProgress;
-                inProgressElement.setAttribute('data-target', inProgress);
-                pendingElement.textContent = pending;
-                pendingElement.setAttribute('data-target', pending);
+                resolvedElement.textContent = stats.resolved || 0;
+                resolvedElement.setAttribute('data-target', stats.resolved || 0);
+                inProgressElement.textContent = stats.inProgress || 0;
+                inProgressElement.setAttribute('data-target', stats.inProgress || 0);
+                pendingElement.textContent = stats.pending || 0;
+                pendingElement.setAttribute('data-target', stats.pending || 0);
                 
                 return true;
             } catch (error) {
@@ -790,16 +833,22 @@
             }
         }
         
-        // Load recent issues for Community Impact section
+        // Load recent issues for Community Impact section from Firebase
         async function loadRecentIssues() {
             try {
-                const response = await fetch('/api/issues');
-                const data = await response.json();
+                // Wait for Firebase to initialize
+                if (typeof getIssuesFromFirestore === 'undefined') {
+                    console.log('Waiting for Firebase to load...');
+                    setTimeout(loadRecentIssues, 1000);
+                    return;
+                }
+                
+                const issues = await getIssuesFromFirestore();
                 const container = document.getElementById('recentIssuesContainer');
                 
-                if (data.issues && data.issues.length > 0) {
+                if (issues && issues.length > 0) {
                     // Show only the 3 most recent issues
-                    const recentIssues = data.issues.slice(0, 3);
+                    const recentIssues = issues.slice(0, 3);
                     container.innerHTML = recentIssues.map(issue => `
                         <div class="col-md-4 mb-3" data-aos="fade-up">
                             <div class="card h-100 shadow-sm">
@@ -899,29 +948,123 @@
             }
         });
         
-        // Login Functions (placeholders - implement with Firebase/Auth0)
-        function loginWithGoogle() {
-            alert('Google login will be integrated with Firebase Auth');
-            // Implement Google OAuth
-            window.location.href = 'report.html'; // Temporary redirect
+        // Authentication Functions
+        async function handleGoogleLogin() {
+            try {
+                const user = await signInWithGoogle();
+                if (user) {
+                    // Close modal
+                    const modals = document.querySelectorAll('.modal.show');
+                    modals.forEach(modal => {
+                        const bsModal = bootstrap.Modal.getInstance(modal);
+                        if (bsModal) bsModal.hide();
+                    });
+                    
+                    // Show success message
+                    alert(`Welcome ${user.displayName}!`);
+                    
+                    // Redirect to report page
+                    setTimeout(() => {
+                        window.location.href = 'report.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
         }
         
-        function loginWithPhone() {
-            alert('Phone login will be integrated with OTP service');
-            // Implement Phone OTP
-            window.location.href = 'report.html'; // Temporary redirect
+        function showPhoneInput() {
+            document.getElementById('phoneInputSection').style.display = 'block';
         }
         
-        function signupWithGoogle() {
-            alert('Google signup will be integrated with Firebase Auth');
-            // Implement Google OAuth
-            window.location.href = 'report.html'; // Temporary redirect
+        function showPhoneInputRegister() {
+            document.getElementById('phoneInputSectionRegister').style.display = 'block';
         }
         
-        function signupWithPhone() {
-            alert('Phone signup will be integrated with OTP service');
-            // Implement Phone OTP
-            window.location.href = 'report.html'; // Temporary redirect
+        async function handlePhoneLogin() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            if (!phoneNumber) {
+                alert('Please enter a phone number');
+                return;
+            }
+            
+            try {
+                await signInWithPhone(phoneNumber);
+                document.getElementById('phoneInputSection').style.display = 'none';
+                document.getElementById('otpInputSection').style.display = 'block';
+                alert('OTP sent to ' + phoneNumber);
+            } catch (error) {
+                alert('Failed to send OTP: ' + error.message);
+            }
+        }
+        
+        async function handlePhoneRegister() {
+            const phoneNumber = document.getElementById('phoneNumberRegister').value;
+            if (!phoneNumber) {
+                alert('Please enter a phone number');
+                return;
+            }
+            
+            try {
+                await signInWithPhone(phoneNumber);
+                document.getElementById('phoneInputSectionRegister').style.display = 'none';
+                document.getElementById('otpInputSectionRegister').style.display = 'block';
+                alert('OTP sent to ' + phoneNumber);
+            } catch (error) {
+                alert('Failed to send OTP: ' + error.message);
+            }
+        }
+        
+        async function handleOTPVerification() {
+            const otpCode = document.getElementById('otpCode').value;
+            if (!otpCode) {
+                alert('Please enter the OTP');
+                return;
+            }
+            
+            try {
+                const user = await verifyOTP(otpCode);
+                if (user) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                    if (modal) modal.hide();
+                    
+                    alert('Login successful!');
+                    
+                    // Redirect to report page
+                    setTimeout(() => {
+                        window.location.href = 'report.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                alert('Invalid OTP: ' + error.message);
+            }
+        }
+        
+        async function handleOTPVerificationRegister() {
+            const otpCode = document.getElementById('otpCodeRegister').value;
+            if (!otpCode) {
+                alert('Please enter the OTP');
+                return;
+            }
+            
+            try {
+                const user = await verifyOTP(otpCode);
+                if (user) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                    if (modal) modal.hide();
+                    
+                    alert('Registration successful!');
+                    
+                    // Redirect to report page
+                    setTimeout(() => {
+                        window.location.href = 'report.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                alert('Invalid OTP: ' + error.message);
+            }
         }
     </script>
 </body>
