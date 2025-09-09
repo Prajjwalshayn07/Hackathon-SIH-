@@ -52,26 +52,34 @@ function setupEventListeners() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    const formData = new FormData();
-    formData.append('title', document.getElementById('title').value);
-    formData.append('description', document.getElementById('description').value);
-    formData.append('category', document.getElementById('category').value);
-    formData.append('priority', document.querySelector('input[name="priority"]:checked').value);
-    formData.append('latitude', document.getElementById('latitude').value);
-    formData.append('longitude', document.getElementById('longitude').value);
-    formData.append('address', document.getElementById('address').value);
-    formData.append('reporter_name', document.getElementById('reporter_name').value);
-    formData.append('reporter_contact', document.getElementById('reporter_contact').value);
+    // Collect form data as JSON object for better Vercel compatibility
+    const issueData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        category: document.getElementById('category').value,
+        priority: document.querySelector('input[name="priority"]:checked').value,
+        latitude: document.getElementById('latitude').value,
+        longitude: document.getElementById('longitude').value,
+        address: document.getElementById('address').value,
+        reporter_name: document.getElementById('reporter_name').value,
+        reporter_contact: document.getElementById('reporter_contact').value
+    };
     
+    // Handle image upload separately if needed
     const imageFile = document.getElementById('image').files[0];
     if (imageFile) {
-        formData.append('image', imageFile);
+        // For now, we'll skip image upload as it requires additional setup
+        // In production, you'd upload to a service like Cloudinary or S3
+        console.log('Image upload not yet implemented for Vercel deployment');
     }
     
     try {
         const response = await fetch(`${API_URL}/issues`, {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(issueData)
         });
         
         if (response.ok) {
@@ -82,11 +90,13 @@ async function handleFormSubmit(e) {
             loadIssues();
             loadStatistics();
         } else {
+            const errorData = await response.text();
+            console.error('Server error:', errorData);
             alert('Error submitting report. Please try again.');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Network error. Please check your connection.');
+        alert('Network error. Please check your connection and try again.');
     }
 }
 

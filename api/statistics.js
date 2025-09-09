@@ -1,37 +1,66 @@
+// Import the shared issues data
+import { getIssues } from './issues.js';
+
 export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Sample statistics (in production, this would query the database)
+  // Get actual issues data
+  const issues = getIssues();
+  
+  // Calculate real statistics from actual issues
   const stats = {
-    total: 156,
-    byStatus: [
-      { status: 'pending', count: 45 },
-      { status: 'in_progress', count: 32 },
-      { status: 'resolved', count: 79 }
-    ],
-    byCategory: [
-      { category: 'pothole', count: 35 },
-      { category: 'streetlight', count: 28 },
-      { category: 'trash', count: 22 },
-      { category: 'water_leak', count: 18 },
-      { category: 'graffiti', count: 15 },
-      { category: 'traffic', count: 20 },
-      { category: 'park', count: 10 },
-      { category: 'other', count: 8 }
-    ],
-    byDepartment: [
-      { department: 'Public Works', count: 50 },
-      { department: 'Electrical', count: 28 },
-      { department: 'Sanitation', count: 22 },
-      { department: 'Water Department', count: 18 },
-      { department: 'Traffic Management', count: 20 },
-      { department: 'Parks & Recreation', count: 10 },
-      { department: 'General', count: 8 }
-    ]
+    total: issues.length,
+    byStatus: calculateByStatus(issues),
+    byCategory: calculateByCategory(issues),
+    byDepartment: calculateByDepartment(issues)
   };
 
   res.status(200).json(stats);
+}
+
+function calculateByStatus(issues) {
+  const statusCounts = {
+    pending: 0,
+    in_progress: 0,
+    resolved: 0
+  };
+  
+  issues.forEach(issue => {
+    if (statusCounts.hasOwnProperty(issue.status)) {
+      statusCounts[issue.status]++;
+    }
+  });
+  
+  return Object.entries(statusCounts).map(([status, count]) => ({ status, count }));
+}
+
+function calculateByCategory(issues) {
+  const categoryCounts = {};
+  
+  issues.forEach(issue => {
+    if (!categoryCounts[issue.category]) {
+      categoryCounts[issue.category] = 0;
+    }
+    categoryCounts[issue.category]++;
+  });
+  
+  return Object.entries(categoryCounts).map(([category, count]) => ({ category, count }));
+}
+
+function calculateByDepartment(issues) {
+  const departmentCounts = {};
+  
+  issues.forEach(issue => {
+    if (issue.department) {
+      if (!departmentCounts[issue.department]) {
+        departmentCounts[issue.department] = 0;
+      }
+      departmentCounts[issue.department]++;
+    }
+  });
+  
+  return Object.entries(departmentCounts).map(([department, count]) => ({ department, count }));
 }

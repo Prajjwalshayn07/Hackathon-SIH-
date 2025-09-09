@@ -635,20 +635,20 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="100">
-                    <div class="stat-number counter" data-target="1234">0</div>
+                    <div class="stat-number counter" id="totalIssuesCounter" data-target="0">0</div>
                     <div>Issues Reported</div>
                 </div>
                 <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="200">
-                    <div class="stat-number counter" data-target="892">0</div>
+                    <div class="stat-number counter" id="resolvedIssuesCounter" data-target="0">0</div>
                     <div>Issues Resolved</div>
                 </div>
                 <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="300">
-                    <div class="stat-number counter" data-target="72">0</div>
-                    <div>Avg Resolution Hours</div>
+                    <div class="stat-number counter" id="inProgressCounter" data-target="0">0</div>
+                    <div>In Progress</div>
                 </div>
                 <div class="col-md-3 stat-box" data-aos="fade-up" data-aos-delay="400">
-                    <div class="stat-number counter" data-target="5678">0</div>
-                    <div>Active Users</div>
+                    <div class="stat-number counter" id="pendingCounter" data-target="0">0</div>
+                    <div>Pending Review</div>
                 </div>
             </div>
         </div>
@@ -731,6 +731,35 @@
             once: true
         });
         
+        // Load real statistics from API
+        async function loadRealStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const stats = await response.json();
+                
+                // Update counter targets with real data
+                document.getElementById('totalIssuesCounter').setAttribute('data-target', stats.total || 0);
+                
+                let resolved = 0, inProgress = 0, pending = 0;
+                stats.byStatus.forEach(item => {
+                    if (item.status === 'resolved') resolved = item.count;
+                    if (item.status === 'in_progress') inProgress = item.count;
+                    if (item.status === 'pending') pending = item.count;
+                });
+                
+                document.getElementById('resolvedIssuesCounter').setAttribute('data-target', resolved);
+                document.getElementById('inProgressCounter').setAttribute('data-target', inProgress);
+                document.getElementById('pendingCounter').setAttribute('data-target', pending);
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                // Set default values if API fails
+                document.getElementById('totalIssuesCounter').setAttribute('data-target', 0);
+                document.getElementById('resolvedIssuesCounter').setAttribute('data-target', 0);
+                document.getElementById('inProgressCounter').setAttribute('data-target', 0);
+                document.getElementById('pendingCounter').setAttribute('data-target', 0);
+            }
+        }
+        
         // Counter Animation
         const counters = document.querySelectorAll('.counter');
         const speed = 200;
@@ -750,16 +779,18 @@
             });
         };
         
-        // Start counter when stats section is visible
-        const statsSection = document.querySelector('.stats-section');
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                countUp();
-                observer.disconnect();
-            }
+        // Load statistics first, then start counter when stats section is visible
+        loadRealStatistics().then(() => {
+            const statsSection = document.querySelector('.stats-section');
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    countUp();
+                    observer.disconnect();
+                }
+            });
+            
+            observer.observe(statsSection);
         });
-        
-        observer.observe(statsSection);
         
         // Navbar scroll effect
         window.addEventListener('scroll', () => {

@@ -1,24 +1,13 @@
 // Simplified API for Vercel Deployment
 // This stores data temporarily in memory (resets on each deployment)
 
-let issues = [
-  {
-    id: 1,
-    title: "Sample Pothole Issue",
-    description: "Large pothole on Main Street",
-    category: "pothole",
-    status: "pending",
-    priority: "high",
-    latitude: 23.3441,
-    longitude: 85.3096,
-    address: "Main Street, Ranchi",
-    reporter_name: "Demo User",
-    created_at: new Date().toISOString(),
-    department: "Public Works"
-  }
-];
+let issues = [];
+let nextId = 1;
 
-let nextId = 2;
+// Export function to get issues for statistics
+export function getIssues() {
+  return issues;
+}
 
 export default function handler(req, res) {
   // Enable CORS
@@ -50,20 +39,34 @@ export default function handler(req, res) {
 
   // POST new issue
   if (req.method === 'POST') {
+    // Parse the request body (Vercel should parse JSON automatically)
+    let data = req.body;
+    
+    // If body is a string, try to parse it
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (e) {
+        // If not JSON, assume it's form data and parse it
+        const params = new URLSearchParams(data);
+        data = Object.fromEntries(params);
+      }
+    }
+    
     const newIssue = {
       id: nextId++,
-      title: req.body.title || 'New Issue',
-      description: req.body.description || '',
-      category: req.body.category || 'other',
+      title: data.title || 'New Issue',
+      description: data.description || '',
+      category: data.category || 'other',
       status: 'pending',
-      priority: req.body.priority || 'normal',
-      latitude: req.body.latitude || 23.3441,
-      longitude: req.body.longitude || 85.3096,
-      address: req.body.address || 'Location not specified',
-      reporter_name: req.body.reporter_name || 'Anonymous',
-      reporter_contact: req.body.reporter_contact || '',
+      priority: data.priority || 'normal',
+      latitude: parseFloat(data.latitude) || 23.3441,
+      longitude: parseFloat(data.longitude) || 85.3096,
+      address: data.address || 'Location not specified',
+      reporter_name: data.reporter_name || 'Anonymous',
+      reporter_contact: data.reporter_contact || '',
       created_at: new Date().toISOString(),
-      department: getDepartment(req.body.category)
+      department: getDepartment(data.category)
     };
 
     issues.unshift(newIssue);
