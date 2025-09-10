@@ -125,7 +125,8 @@ function calculateStatistics(issues) {
 
 // Update Statistics
 function updateStatistics(stats) {
-    document.getElementById('statTotal').textContent = stats.total || 0;
+    const total = stats.total || 0;
+    document.getElementById('statTotal').textContent = total;
     
     const statusCounts = {
         pending: 0,
@@ -142,6 +143,26 @@ function updateStatistics(stats) {
     document.getElementById('statPending').textContent = statusCounts.pending;
     document.getElementById('statInProgress').textContent = statusCounts.in_progress;
     document.getElementById('statResolved').textContent = statusCounts.resolved;
+    
+    // Add visual feedback for status changes
+    animateStatusChange('statPending', statusCounts.pending);
+    animateStatusChange('statInProgress', statusCounts.in_progress);
+    animateStatusChange('statResolved', statusCounts.resolved);
+}
+
+// Animate status change with visual feedback
+function animateStatusChange(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const currentValue = parseInt(element.textContent);
+        if (currentValue !== newValue) {
+            element.style.transform = 'scale(1.2)';
+            element.style.transition = 'transform 0.3s ease';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 300);
+        }
+    }
 }
 
 // Update Charts
@@ -286,18 +307,37 @@ function displayIssuesTable(issues) {
             <td>#${issue.id}</td>
             <td>${escapeHtml(issue.title)}</td>
             <td>${formatCategory(issue.category)}</td>
-            <td><span class="badge badge-${issue.status}">${formatStatus(issue.status)}</span></td>
+            <td>
+                <span class="badge badge-${issue.status}">${formatStatus(issue.status)}</span>
+                <div class="btn-group btn-group-sm mt-1" role="group">
+                    ${issue.status !== 'pending' ? '' : `
+                        <button class="btn btn-sm btn-outline-info" onclick="quickUpdateStatus('${issue.id}', 'in_progress')" title="Start Progress">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    `}
+                    ${issue.status !== 'resolved' ? `
+                        <button class="btn btn-sm btn-outline-success" onclick="quickUpdateStatus('${issue.id}', 'resolved')" title="Mark Resolved">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    ` : ''}
+                    ${issue.status === 'resolved' ? `
+                        <button class="btn btn-sm btn-outline-warning" onclick="quickUpdateStatus('${issue.id}', 'pending')" title="Reopen">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
             <td><span class="priority-${issue.priority}">${issue.priority}</span></td>
             <td>${issue.department || 'Unassigned'}</td>
             <td>${formatDate(issue.created_at)}</td>
             <td class="action-buttons">
-                <button class="btn btn-sm btn-primary" onclick="viewIssueDetail(${issue.id})" title="View Details">
+                <button class="btn btn-sm btn-primary" onclick="viewIssueDetail('${issue.id}')" title="View Details">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-warning" onclick="editIssue(${issue.id})" title="Edit">
+                <button class="btn btn-sm btn-warning" onclick="editIssue('${issue.id}')" title="Edit">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteIssue(${issue.id})" title="Delete">
+                <button class="btn btn-sm btn-danger" onclick="deleteIssue('${issue.id}')" title="Delete">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -390,11 +430,25 @@ async function viewIssueDetail(issueId) {
             
             <div class="row mt-3">
                 <div class="col-12">
-                    <h6>Update Issue</h6>
+                    <h6>🔧 Update Issue Status</h6>
+                    <div class="alert alert-info">
+                        <strong>Quick Status Update:</strong>
+                        <div class="btn-group mt-2" role="group">
+                            <button type="button" class="btn btn-warning" onclick="quickUpdateStatus('${issue.id}', 'pending')">
+                                <i class="fas fa-clock"></i> Set Pending
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="quickUpdateStatus('${issue.id}', 'in_progress')">
+                                <i class="fas fa-spinner"></i> Set In Progress
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="quickUpdateStatus('${issue.id}', 'resolved')">
+                                <i class="fas fa-check"></i> Mark Resolved
+                            </button>
+                        </div>
+                    </div>
                     <form id="updateForm">
                         <div class="row">
                             <div class="col-md-4">
-                                <label>Status</label>
+                                <label>Current Status</label>
                                 <select class="form-select" id="updateStatus">
                                     <option value="pending" ${issue.status === 'pending' ? 'selected' : ''}>Pending</option>
                                     <option value="in_progress" ${issue.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
@@ -470,6 +524,72 @@ async function viewIssueDetail(issueId) {
 // Edit Issue (opens detail modal in edit mode)
 function editIssue(issueId) {
     viewIssueDetail(issueId);
+}
+
+// Quick Update Status (One-click status change)
+function quickUpdateStatus(issueId, newStatus) {
+    if (!issueId) return;
+    
+    // Confirm the action
+    const statusText = newStatus.replace('_', ' ').toUpperCase();
+    if (!confirm(`Are you sure you want to change the status to ${statusText}?`)) {
+        return;
+    }
+    
+    try {
+        // Update in localStorage
+        const issues = JSON.parse(localStorage.getItem('civicIssues')) || [];
+        const issueIndex = issues.findIndex(i => 
+            i.id === issueId || 
+            i.id === `issue_${issueId}` ||
+            i.id == issueId
+        );
+        
+        if (issueIndex !== -1) {
+            const oldStatus = issues[issueIndex].status;
+            issues[issueIndex].status = newStatus;
+            issues[issueIndex].updated_at = new Date().toISOString();
+            
+            // If marking as resolved, add resolution time
+            if (newStatus === 'resolved' && oldStatus !== 'resolved') {
+                issues[issueIndex].resolved_at = new Date().toISOString();
+            }
+            
+            localStorage.setItem('civicIssues', JSON.stringify(issues));
+            
+            // Show success message with visual feedback
+            const alertClass = newStatus === 'resolved' ? 'success' : 
+                              newStatus === 'in_progress' ? 'info' : 'warning';
+            
+            // Update the modal content to show the new status
+            const statusBadge = document.querySelector('#issueDetailModal .badge');
+            if (statusBadge) {
+                statusBadge.className = `badge badge-${newStatus}`;
+                statusBadge.textContent = formatStatus(newStatus);
+            }
+            
+            // Update the select dropdown
+            const statusSelect = document.getElementById('updateStatus');
+            if (statusSelect) {
+                statusSelect.value = newStatus;
+            }
+            
+            alert(`✅ Status updated to ${statusText}!`);
+            
+            // Reload data to update statistics
+            loadDashboardData();
+            loadAllIssues();
+            
+            // Close and reopen the modal to refresh
+            bootstrap.Modal.getInstance(document.getElementById('issueDetailModal')).hide();
+            setTimeout(() => viewIssueDetail(issueId), 500);
+        } else {
+            alert('Issue not found');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        alert('Error updating status');
+    }
 }
 
 // Save Issue Changes
