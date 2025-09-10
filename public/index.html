@@ -946,7 +946,17 @@
         // Authentication Functions
         async function handleGoogleLogin() {
             try {
-                const user = await signInWithGoogle();
+                // Use the demo auth function (no Firebase needed)
+                const user = {
+                    uid: 'google_' + Date.now(),
+                    displayName: 'Demo User',
+                    email: 'demo@gmail.com',
+                    provider: 'google'
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
                 if (user) {
                     // Close modal
                     const modals = document.querySelectorAll('.modal.show');
@@ -976,6 +986,8 @@
             document.getElementById('phoneInputSectionRegister').style.display = 'block';
         }
         
+        let sentOTP = '';
+        
         async function handlePhoneLogin() {
             const phoneNumber = document.getElementById('phoneNumber').value;
             if (!phoneNumber) {
@@ -984,7 +996,12 @@
             }
             
             try {
-                await signInWithPhone(phoneNumber);
+                // Generate random 6-digit OTP for demo
+                sentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                // Show OTP in alert (in real app, this would be sent via SMS)
+                alert(`Demo OTP: ${sentOTP}\n(In production, this would be sent via SMS)`);
+                
                 document.getElementById('phoneInputSection').style.display = 'none';
                 document.getElementById('otpInputSection').style.display = 'block';
                 alert('OTP sent to ' + phoneNumber);
@@ -1001,7 +1018,12 @@
             }
             
             try {
-                await signInWithPhone(phoneNumber);
+                // Generate random 6-digit OTP for demo
+                sentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                // Show OTP in alert
+                alert(`Demo OTP: ${sentOTP}\n(In production, this would be sent via SMS)`);
+                
                 document.getElementById('phoneInputSectionRegister').style.display = 'none';
                 document.getElementById('otpInputSectionRegister').style.display = 'block';
                 alert('OTP sent to ' + phoneNumber);
@@ -1012,13 +1034,29 @@
         
         async function handleOTPVerification() {
             const otpCode = document.getElementById('otpCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            
             if (!otpCode) {
                 alert('Please enter the OTP');
                 return;
             }
             
+            if (otpCode !== sentOTP) {
+                alert('Invalid OTP. Please try again.');
+                return;
+            }
+            
             try {
-                const user = await verifyOTP(otpCode);
+                // Create user session for demo
+                const user = {
+                    uid: 'phone_' + Date.now(),
+                    phoneNumber: phoneNumber,
+                    displayName: phoneNumber,
+                    provider: 'phone'
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
                 if (user) {
                     // Close modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
@@ -1038,13 +1076,29 @@
         
         async function handleOTPVerificationRegister() {
             const otpCode = document.getElementById('otpCodeRegister').value;
+            const phoneNumber = document.getElementById('phoneNumberRegister').value;
+            
             if (!otpCode) {
                 alert('Please enter the OTP');
                 return;
             }
             
+            if (otpCode !== sentOTP) {
+                alert('Invalid OTP. Please try again.');
+                return;
+            }
+            
             try {
-                const user = await verifyOTP(otpCode);
+                // Create user session for demo
+                const user = {
+                    uid: 'phone_' + Date.now(),
+                    phoneNumber: phoneNumber,
+                    displayName: phoneNumber,
+                    provider: 'phone'
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
                 if (user) {
                     // Close modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
