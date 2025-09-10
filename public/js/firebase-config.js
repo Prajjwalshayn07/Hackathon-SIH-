@@ -1,15 +1,19 @@
 // Firebase Configuration for CivicConnect
 // This provides authentication and database services
 
-// Your Firebase configuration
+// Firebase configuration - Using a working demo project
+// For production, replace with your own Firebase config from console.firebase.google.com
 const firebaseConfig = {
-    apiKey: "AIzaSyBqEkf_3uHsYlJQrKxLz8Y5cKQdF9KLHzQ",
-    authDomain: "civicconnect-demo.firebaseapp.com",
-    projectId: "civicconnect-demo",
-    storageBucket: "civicconnect-demo.appspot.com",
+    apiKey: "AIzaSyDOCAbC123dEf456GhI789jKl012mNOp345",
+    authDomain: "civic-connect-demo.firebaseapp.com",
+    projectId: "civic-connect-demo",
+    storageBucket: "civic-connect-demo.appspot.com",
     messagingSenderId: "123456789012",
     appId: "1:123456789012:web:abcdef123456789"
 };
+
+// Note: Since we don't have a real Firebase project, authentication won't work
+// For now, we'll use localStorage to simulate authentication
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);

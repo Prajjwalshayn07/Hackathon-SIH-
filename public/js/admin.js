@@ -72,22 +72,55 @@ function switchTab(tabName) {
 // Load Dashboard Data
 async function loadDashboardData() {
     try {
-        // Load statistics
-        const statsResponse = await fetch(`${API_URL}/statistics`);
-        const stats = await statsResponse.json();
+        // Load issues from localStorage
+        const issues = JSON.parse(localStorage.getItem('civicIssues')) || [];
+        allIssues = issues;
+        
+        // Calculate statistics from local data
+        const stats = calculateStatistics(issues);
         
         updateStatistics(stats);
         updateCharts(stats);
         
-        // Load recent issues
-        const issuesResponse = await fetch(`${API_URL}/issues`);
-        const issuesData = await issuesResponse.json();
-        allIssues = issuesData.issues;
-        
-        displayRecentIssues(issuesData.issues.slice(0, 5));
+        // Display recent issues
+        displayRecentIssues(issues.slice(0, 5));
     } catch (error) {
         console.error('Error loading dashboard data:', error);
     }
+}
+
+// Calculate statistics from issues
+function calculateStatistics(issues) {
+    const stats = {
+        total: issues.length,
+        byStatus: [],
+        byCategory: [],
+        byDepartment: []
+    };
+    
+    // Count by status
+    const statusCounts = {};
+    const categoryCounts = {};
+    const departmentCounts = {};
+    
+    issues.forEach(issue => {
+        // Status
+        statusCounts[issue.status] = (statusCounts[issue.status] || 0) + 1;
+        
+        // Category
+        categoryCounts[issue.category] = (categoryCounts[issue.category] || 0) + 1;
+        
+        // Department
+        const dept = issue.department || 'Unassigned';
+        departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
+    });
+    
+    // Convert to array format
+    stats.byStatus = Object.entries(statusCounts).map(([status, count]) => ({ status, count }));
+    stats.byCategory = Object.entries(categoryCounts).map(([category, count]) => ({ category, count }));
+    stats.byDepartment = Object.entries(departmentCounts).map(([department, count]) => ({ department, count }));
+    
+    return stats;
 }
 
 // Update Statistics
@@ -231,9 +264,8 @@ function displayRecentIssues(issues) {
 // Load All Issues
 async function loadAllIssues() {
     try {
-        const response = await fetch(`${API_URL}/issues`);
-        const data = await response.json();
-        allIssues = data.issues;
+        const issues = JSON.parse(localStorage.getItem('civicIssues')) || [];
+        allIssues = issues;
         displayIssuesTable(allIssues);
     } catch (error) {
         console.error('Error loading issues:', error);
@@ -305,11 +337,15 @@ function resetFilters() {
 // View Issue Detail
 async function viewIssueDetail(issueId) {
     try {
-        const response = await fetch(`${API_URL}/issues/${issueId}`);
-        const data = await response.json();
+        const issues = JSON.parse(localStorage.getItem('civicIssues')) || [];
+        const issue = issues.find(i => i.id === issueId || i.id === `issue_${issueId}`);
         
-        const issue = data.issue;
-        const comments = data.comments || [];
+        if (!issue) {
+            alert('Issue not found');
+            return;
+        }
+        
+        const comments = [];
         
         currentIssueId = issueId;
         
@@ -449,25 +485,24 @@ async function saveIssueChanges() {
     };
     
     try {
-        const response = await fetch(`${API_URL}/issues/${currentIssueId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updateData)
-        });
+        // Update in localStorage
+        const issues = JSON.parse(localStorage.getItem('civicIssues')) || [];
+        const issueIndex = issues.findIndex(i => i.id === currentIssueId || i.id === `issue_${currentIssueId}`);
         
-        if (response.ok) {
+        if (issueIndex !== -1) {
+            issues[issueIndex] = { ...issues[issueIndex], ...updateData, updated_at: new Date().toISOString() };
+            localStorage.setItem('civicIssues', JSON.stringify(issues));
+            
             alert('Issue updated successfully!');
             bootstrap.Modal.getInstance(document.getElementById('issueDetailModal')).hide();
             loadAllIssues();
             loadDashboardData();
         } else {
-            alert('Error updating issue');
+            alert('Issue not found');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Network error');
+        alert('Error updating issue');
     }
 }
 
@@ -511,20 +546,21 @@ async function deleteIssue(issueId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/issues/${issueId}`, {
-            method: 'DELETE'
-        });
+        // Delete from localStorage
+        const issues = JSON.parse(localStorage.getItem('civicIssues')) || [];
+        const filteredIssues = issues.filter(i => i.id !== issueId && i.id !== `issue_${issueId}`);
         
-        if (response.ok) {
+        if (filteredIssues.length < issues.length) {
+            localStorage.setItem('civicIssues', JSON.stringify(filteredIssues));
             alert('Issue deleted successfully');
             loadAllIssues();
             loadDashboardData();
         } else {
-            alert('Error deleting issue');
+            alert('Issue not found');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Network error');
+        alert('Error deleting issue');
     }
 }
 
