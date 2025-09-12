@@ -47,9 +47,8 @@ A mobile-first web application that enables citizens to report civic issues dire
    ```
 
 4. **Access the application**
-   - Citizens Portal: http://localhost:3000
-   - Admin Dashboard: http://localhost:3000/admin.html
-   - API Endpoints: http://localhost:3000/api/issues
+   - Citizens Portal: https://civic-issue-reporter-l4dvpsfak-prajjwals-projects-3400e066.vercel.app
+   - Admin Dashboard: https://civic-issue-reporter-l4dvpsfak-prajjwals-projects-3400e066.vercel.app/admin.html
 
 ## 📁 Project Structure
 
