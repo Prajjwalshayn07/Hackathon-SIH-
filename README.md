@@ -24,6 +24,13 @@ A mobile-first web application that enables citizens to report civic issues dire
 
 ## 🚀 Quick Start
 
+## 🛠️ Tech Stack
+- **Frontend:** HTML, CSS, JavaScript  
+- **Backend:** Node.js, Express.js  
+- **Database:** SQLite  
+- **Hosting:** Vercel (Frontend), Local/Express server (Backend)  
+- **Other:** GPS API, File Uploads  
+
 ### Prerequisites
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
